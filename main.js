@@ -8,7 +8,21 @@ let textoInteracao;
 //zona hardcoded (teste temporário)
 let zonaCasa1;
 
+//Projetos
+//let projeto1 = "https://www.twitch.tv/sovousetuvai";
+let projeto1 = "./teste.html";
+//let projeto2 = "https://www.youtube.com/@sovousetuvai";
+let projeto2 = "";
+
 const velocidade = 100;
+
+let cena;
+
+const zoom_padrao = 3;
+let projetoAberto = false;
+
+//DEBUG
+let debugAtivo = true;
 
 const config = {
     type: Phaser.AUTO,
@@ -24,6 +38,7 @@ const config = {
     },
 
     scene: {
+        key: 'mapa',
         preload: preload,
         create: create,
         update: update
@@ -47,6 +62,7 @@ function preload() {
 }
 
 function create() {
+    cena = this;
 
     //mapa
     const map = this.make.tilemap({ key: 'map' });
@@ -92,19 +108,29 @@ function create() {
     this.physics.add.existing(zonaCasa1);
     zonaCasa1.body.setAllowGravity(false);
     zonaCasa1.body.setImmovable(true);
-    zonaCasa1.url = "https://www.twitch.tv/sovousetuvai";
+    zonaCasa1.url = projeto1
 
     zonaCasa2 = this.add.zone(470, 460, 250, 140);
     this.physics.add.existing(zonaCasa2);
     zonaCasa2.body.setAllowGravity(false);
     zonaCasa2.body.setImmovable(true);
-    zonaCasa2.url = "https://www.youtube.com/@sovousetuvai";
+    zonaCasa2.url = projeto2
 
     //cameras
     //mundo
     this.cameras.main.startFollow(personagem);
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-    this.cameras.main.setZoom(1);
+    this.cameras.main.setZoom(zoom_padrao);
+
+    //fadeIn Resume
+    this.cameras.main.fadeIn(300, 0, 0, 0);
+
+    this.tweens.add({
+        targets: this.cameras.main,
+        zoom: zoom_padrao,
+        duration: 300,
+        ease: 'Quad.easeOut'
+    });
 
     //UI
     const uiCamera = this.cameras.add(0, 0, 1280, 900);
@@ -113,7 +139,7 @@ function create() {
 
 
     //interações de UI
-    textoInteracao = this.add.text(640, 850, 'Pressione E', {
+    textoInteracao = this.add.text(240, 250, 'Pressione E', {
         fontSize: '36px',
         fill: '#ffffff',
         backgroundColor: '#000000'
@@ -134,6 +160,7 @@ function create() {
 function update() {
     personagem.setVelocity(0);
 
+    if (projetoAberto) return;
 
     podeInteragir = false;
 
@@ -165,6 +192,65 @@ function update() {
 
 
     if (podeInteragir && Phaser.Input.Keyboard.JustDown(teclaE)) {
-        window.open(zonaAtual.url, '_blank')
+        //zoom leve (retorno ao mapa)
+        this.tweens.add({
+            targets: this.cameras.main,
+            zoom: 10,
+            duration: 1000,
+            ease: 'Quad.easeIn'
+        });
+
+        //fade
+        this.cameras.main.fadeOut(1000, 0, 0, 0);
+
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            projetoAberto = true;
+            const painel = document.getElementById("painelProjeto");
+            const frame = document.getElementById("frameProjeto");
+
+            frame.src = zonaAtual.url;
+            painel.style.display = "block";
+
+            cena.scene.pause();
+        })
+
+
     }
+
+    //DEBUG
+    if (debugAtivo) {
+        const debugPanel = document.getElementById("debugPanel");
+        //debugPanel.style.display = 'none'
+
+        const zoomText = document.getElementById("debugZoom");
+
+        if (zoomText) {
+            zoomText.innerText = "Zoom: " + this.cameras.main.zoom.toFixed(2);
+        }
+    }
+
+}
+
+function fecharProjeto() {
+    const painel = document.getElementById("painelProjeto");
+    const frame = document.getElementById("frameProjeto");
+
+    painel.style.display = "none";
+    frame.src = "";
+
+    projetoAberto = false;
+
+    cena.scene.resume();
+
+    cena.cameras.main.setZoom(zoom_padrao);
+
+    // anima suavemente
+    cena.tweens.add({
+        targets: cena.cameras.main,
+        zoom: zoom_padrao,
+        duration: 800,
+        ease: 'Quad.easeOut'
+    });
+
+    cena.cameras.main.fadeIn(800, 0, 0, 0);
 }
