@@ -15,6 +15,8 @@ let projeto1 = "./teste.html";
 let projeto2 = "";
 
 const velocidade = 100;
+let velocidadeAtual = 0;
+const frameRateBase = 8;
 
 let cena;
 
@@ -23,6 +25,7 @@ let projetoAberto = false;
 
 //DEBUG
 let debugAtivo = true;
+let debugFisicaAtivo = false;
 
 const config = {
     type: Phaser.AUTO,
@@ -33,7 +36,7 @@ const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true
+            debug: false
         }
     },
 
@@ -49,7 +52,10 @@ new Phaser.Game(config);
 
 function preload() {
     //personagem
-    this.load.image('personagem', './assets/tiles/Player.png');
+    this.load.spritesheet('personagem', './assets/tiles/Player1.png', {
+        frameWidth: 64,
+        frameHeight: 64
+    });
 
     //tiles
     //this.load.image('ground', './assets/tiles/Textures.png');
@@ -85,8 +91,30 @@ function create() {
 
     //personagem
     personagem = this.physics.add.sprite(180, 200, 'personagem');
-    personagem.body.setSize(32, 32);
-    personagem.body.setOffset(0, 38);
+    personagem.body.setSize(22, 20);
+    personagem.body.setOffset(21, 45);
+
+    function criarAnimacao(nome, linha) {
+        this.anims.create({
+            key: nome,
+            frames: this.anims.generateFrameNumbers('personagem', {
+                start: linha * 4,
+                end: linha * 4 + 3
+            }),
+            frameRate: frameRateBase,
+            repeat: -1
+        });
+    }
+
+    //chamadas de animação
+    criarAnimacao.call(this, 'baixo-idle', 0)
+    criarAnimacao.call(this, 'esquerda', 1)
+    criarAnimacao.call(this, 'cima-idle', 2)
+    criarAnimacao.call(this, 'direita', 3)
+    criarAnimacao.call(this, 'baixo', 4)
+    criarAnimacao.call(this, 'baixo-esquerda', 5)
+    criarAnimacao.call(this, 'cima', 6)
+    criarAnimacao.call(this, 'baixo-direita', 7)
 
     //teclas
     tecla = this.input.keyboard.addKeys({
@@ -155,12 +183,84 @@ function create() {
         podeInteragir = true;
     });
 
+
+    //debug
+    this.physics.world.createDebugGraphic();
+
+    // força estado inicial OFF
+    this.physics.world.debugGraphic.visible = debugFisicaAtivo;
 }
 
 function update() {
-    personagem.setVelocity(0);
-
     if (projetoAberto) return;
+
+
+    //movimentação personagem
+    let dirX = 0;
+    let dirY = 0;
+
+    //Se quiser efeito de deslizar, colocar no topo do arquivo as duas variáveis abaixo
+    let ultimoVX = 0;
+    let ultimoVY = 0;
+
+    if (tecla.left.isDown) dirX = -1;
+    if (tecla.right.isDown) dirX = 1;
+    if (tecla.up.isDown) dirY = -1;
+    if (tecla.down.isDown) dirY = 1;
+
+    //estado
+    let estaMovendo = dirX !== 0 || dirY !== 0;
+    let estaCorrendo = tecla.shift.isDown && estaMovendo;
+
+    //velocidade
+    let velocidadeAlvo = estaCorrendo ? 200 : velocidade;
+
+    if (!estaMovendo) velocidadeAlvo = 0;
+
+    //suavização
+    velocidadeAtual = Phaser.Math.Linear(velocidadeAtual, velocidadeAlvo, 0.05);
+
+    //correção diagonal
+    let vx = dirX;
+    let vy = dirY;
+
+    if (vx !== 0 && vy !== 0) {
+        vx *= 0.7071;
+        vy *= 0.7071;
+    }
+
+    if (estaMovendo) {
+        ultimoVX = vx;
+        ultimoVY = vy;
+    }
+
+    //movimento
+    personagem.setVelocity(ultimoVX * velocidadeAtual, ultimoVY * velocidadeAtual);
+
+    //direções
+    let direcao = '';
+
+    if (dirX === 0 && dirY === 0) direcao = 'baixo-idle';
+    else if (dirX === 0 && dirY === 1) direcao = 'baixo';
+    else if (dirX === 0 && dirY === -1) direcao = 'cima';
+    else if (dirX === -1 && dirY === 0) direcao = 'baixo-esquerda';
+    else if (dirX === 1 && dirY === 0) direcao = 'baixo-direita';
+
+    else if (dirX === -1 && dirY === 1) direcao = 'baixo-esquerda';
+    else if (dirX === 1 && dirY === 1) direcao = 'baixo-direita';
+    else if (dirX === -1 && dirY === -1) direcao = 'baixo-esquerda';
+    else if (dirX === 1 && dirY === -1) direcao = 'baixo-direita';
+
+
+    if (direcao !== '') {
+        personagem.anims.play(direcao, true);
+
+        personagem.anims.timeScale = estaCorrendo ? 1.5 : 1;
+    } else {
+        personagem.anims.stop();
+    }
+
+    //Interações
 
     podeInteragir = false;
 
@@ -180,15 +280,6 @@ function update() {
     } else {
         textoInteracao.setVisible(false);
     }
-
-    let velocidadeAtual = velocidade;
-
-    if (tecla.shift.isDown) { velocidadeAtual = 200 };
-
-    if (tecla.left.isDown) { personagem.setVelocityX(-velocidadeAtual) };
-    if (tecla.right.isDown) { personagem.setVelocityX(+velocidadeAtual) };
-    if (tecla.up.isDown) { personagem.setVelocityY(-velocidadeAtual) };
-    if (tecla.down.isDown) { personagem.setVelocityY(+velocidadeAtual) };
 
 
     if (podeInteragir && Phaser.Input.Keyboard.JustDown(teclaE)) {
@@ -253,4 +344,23 @@ function fecharProjeto() {
     });
 
     cena.cameras.main.fadeIn(800, 0, 0, 0);
+}
+
+function toggleDebugFisica() {
+    const world = cena.physics.world;
+    const btn = document.getElementById("btnDebug");
+
+    if (!world.debugGraphic) return;
+
+    // alterna visibilidade
+    world.debugGraphic.visible = !world.debugGraphic.visible;
+
+
+    if (world.debugGraphic.visible) {
+        btn.innerText = "Debug: ON";
+        debugFisicaAtivo = true
+    } else {
+        btn.innerText = "Debug: OFF";
+        debugFisicaAtivo = false
+    }
 }
