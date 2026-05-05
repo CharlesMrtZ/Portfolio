@@ -41,15 +41,17 @@ export function criarControlesMobile(scene) {
     container.appendChild(actions);
 
     function criarBotao(parent, label, x, y, onPress, onRelease) {
+        const size = Math.min(window.innerWidth, window.innerHeight) * 0.15; // Tamanho do botão baseado na menor dimensão da tela
+
         const btn = document.createElement('div');
         btn.innerText = label;
         btn.style.position = 'absolute';
         btn.style.left = x + 'px';
         btn.style.top = y + 'px';
 
-        btn.style.width = '70px';
-        btn.style.height = '70px';
-        btn.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+        btn.style.width = size + 'px';
+        btn.style.height = size + 'px';
+        btn.style.backgroundColor = 'rgba(78, 78, 78, 0.6)';
         btn.style.color = '#fff';
         btn.style.display = 'flex';
         btn.style.alignItems = 'center';
@@ -72,14 +74,14 @@ export function criarControlesMobile(scene) {
     }
 
     // D-PAD
-    criarBotao(dpad, "↑", 70, 0, () => touchInput.up = true, () => touchInput.up = false);
-    criarBotao(dpad, "↓", 70, 140, () => touchInput.down = true, () => touchInput.down = false);
-    criarBotao(dpad, "←", 0, 70, () => touchInput.left = true, () => touchInput.left = false);
-    criarBotao(dpad, "→", 140, 70, () => touchInput.right = true, () => touchInput.right = false);
+    criarBotao(dpad, "↑", 48, 350, () => touchInput.up = true, () => touchInput.up = false);
+    criarBotao(dpad, "↓", 48, 470, () => touchInput.down = true, () => touchInput.down = false);
+    criarBotao(dpad, "←", -10, 410, () => touchInput.left = true, () => touchInput.left = false);
+    criarBotao(dpad, "→", 106, 410, () => touchInput.right = true, () => touchInput.right = false);
 
     // botões direita
-    criarBotao(dpad, "RUN", 1170, 30, () => touchInput.run = true, () => touchInput.run = false);
-    criarBotao(dpad, "E", 1170, 160, () => touchInput.interact = true, () => touchInput.interact = false);
+    criarBotao(dpad, "RUN", 290, 480, () => touchInput.run = true, () => touchInput.run = false);
+    criarBotao(dpad, "E", 290, 345, () => touchInput.interact = true, () => touchInput.interact = false);
 
     return touchInput;
 }

@@ -29,7 +29,10 @@ const frameRateBase = 8;
 
 let cena;
 
-const zoom_padrao = 3;
+const isMobile = window.innerWidth < 768;
+
+const zoom_padrao = isMobile ? 4 : 3;
+
 let projetoAberto = false;
 
 //mobile
@@ -40,9 +43,14 @@ let debugAtivo = true;
 let debugFisicaAtivo = false;
 
 const config = {
+    parent: 'gameContainer',
     type: Phaser.AUTO,
-    width: 1280,
-    height: 900,
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_HORIZONTALLY,
+        width: 1280,
+        height: 900
+    },
     backgroundColor: '#222222',
     pixelArt: true,
     physics: {
