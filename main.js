@@ -23,6 +23,17 @@ let cena;
 const zoom_padrao = 3;
 let projetoAberto = false;
 
+//mobile
+let touchInput = {
+    up: false,
+    down: false,
+    left: false,
+    right: false
+};
+
+let botoesMobile = {};
+let usarControlesMobile = false;
+
 //DEBUG
 let debugAtivo = true;
 let debugFisicaAtivo = false;
@@ -183,6 +194,55 @@ function create() {
         podeInteragir = true;
     });
 
+    //mobile
+    // usarControlesMobile = this.sys.game.device.input.touch;
+    usarControlesMobile = true;
+
+    if (usarControlesMobile) {
+
+        const largura = this.scale.width;
+        const altura = this.scale.height;
+
+        function criarBotao(x, y, label) {
+            const bg = this.add.circle(x, y, 40, 0x000000, 0.4)
+                .setInteractive()
+                .setScrollFactor(0)
+                .setDepth(9999);
+
+            const ajusteY = (label === '←' || label === '→') ? -10 : 0;
+
+            const txt = this.add.text(x, y + ajusteY, label, {
+                fontSize: '80px',
+                color: '#ffffff'
+            })
+                .setOrigin(0.5)
+                .setScrollFactor(0)
+                .setDepth(10000);
+
+            return bg;
+        }
+
+        botoesMobile.left = criarBotao.call(this, 60, altura - 700, '←');
+        botoesMobile.right = criarBotao.call(this, 190, altura - 700, '→');
+        botoesMobile.up = criarBotao.call(this, 130, altura - 770, '↑');
+        botoesMobile.down = criarBotao.call(this, 130, altura - 630, '↓');
+
+        botoesMobile.left.on('pointerdown', () => touchInput.left = true);
+        botoesMobile.left.on('pointerup', () => touchInput.left = false);
+        botoesMobile.left.on('pointerout', () => touchInput.left = false);
+
+        botoesMobile.right.on('pointerdown', () => touchInput.right = true);
+        botoesMobile.right.on('pointerup', () => touchInput.right = false);
+        botoesMobile.right.on('pointerout', () => touchInput.right = false);
+
+        botoesMobile.up.on('pointerdown', () => touchInput.up = true);
+        botoesMobile.up.on('pointerup', () => touchInput.up = false);
+        botoesMobile.up.on('pointerout', () => touchInput.up = false);
+
+        botoesMobile.down.on('pointerdown', () => touchInput.down = true);
+        botoesMobile.down.on('pointerup', () => touchInput.down = false);
+        botoesMobile.down.on('pointerout', () => touchInput.down = false);
+    }
 
     //debug
     this.physics.world.createDebugGraphic();
@@ -207,6 +267,12 @@ function update() {
     if (tecla.right.isDown) dirX = 1;
     if (tecla.up.isDown) dirY = -1;
     if (tecla.down.isDown) dirY = 1;
+
+    // mobile - touch
+    if (touchInput.left) dirX -= 1;
+    if (touchInput.right) dirX += 1;
+    if (touchInput.up) dirY -= 1;
+    if (touchInput.down) dirY += 1;
 
     //estado
     let estaMovendo = dirX !== 0 || dirY !== 0;
