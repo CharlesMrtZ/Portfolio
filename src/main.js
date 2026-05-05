@@ -1,3 +1,12 @@
+import { criarInput} from "./systems/input.js";
+import { criarControlesMobile } from "./systems/mobileControls.js";
+import { atualizarPlayer } from "./entities/player.js"
+
+//imports
+let input;
+let touchInput;
+
+
 let personagem;
 let tecla;
 let teclaE;
@@ -7,14 +16,14 @@ let textoInteracao;
 
 //zona hardcoded (teste temporário)
 let zonaCasa1;
+let zonaCasa2;
 
 //Projetos
 //let projeto1 = "https://www.twitch.tv/sovousetuvai";
-let projeto1 = "./teste.html";
+let projeto1 = "../teste.html";
 //let projeto2 = "https://www.youtube.com/@sovousetuvai";
 let projeto2 = "";
 
-const velocidade = 100;
 let velocidadeAtual = 0;
 const frameRateBase = 8;
 
@@ -24,14 +33,6 @@ const zoom_padrao = 3;
 let projetoAberto = false;
 
 //mobile
-let touchInput = {
-    up: false,
-    down: false,
-    left: false,
-    right: false
-};
-
-let botoesMobile = {};
 let usarControlesMobile = false;
 
 //DEBUG
@@ -62,6 +63,10 @@ const config = {
 new Phaser.Game(config);
 
 function preload() {
+    //imports
+    input = criarInput(this);
+
+
     //personagem
     this.load.spritesheet('personagem', './assets/tiles/Player1.png', {
         frameWidth: 64,
@@ -69,12 +74,12 @@ function preload() {
     });
 
     //tiles
-    //this.load.image('ground', './assets/tiles/Textures.png');
-    this.load.image('terrain', './assets/map 2/island.png');
-    this.load.image('objects2', './assets/map 2/objects2.png');
-    this.load.image('fence', './assets/map 2/fence.png');
-    //this.load.tilemapTiledJSON('map', './assets/map/map.json')
-    this.load.tilemapTiledJSON('map', './assets/map 2/map1.json')
+    //this.load.image('ground', '../assets/tiles/Textures.png');
+    this.load.image('terrain', '../assets/map 2/island.png');
+    this.load.image('objects2', '../assets/map 2/objects2.png');
+    this.load.image('fence', '../assets/map 2/fence.png');
+    //this.load.tilemapTiledJSON('map', '../assets/map/map.json')
+    this.load.tilemapTiledJSON('map', '../assets/map 2/map1.json')
 
 }
 
@@ -127,16 +132,6 @@ function create() {
     criarAnimacao.call(this, 'cima', 6)
     criarAnimacao.call(this, 'baixo-direita', 7)
 
-    //teclas
-    tecla = this.input.keyboard.addKeys({
-        up: 'W',
-        left: 'A',
-        down: 'S',
-        right: 'D',
-        shift: Phaser.Input.Keyboard.KeyCodes.SHIFT,
-    });
-
-    teclaE = this.input.keyboard.addKey('E');
 
     //colisores
     this.physics.add.collider(personagem, waterLayer);
@@ -199,49 +194,7 @@ function create() {
     usarControlesMobile = true;
 
     if (usarControlesMobile) {
-
-        const largura = this.scale.width;
-        const altura = this.scale.height;
-
-        function criarBotao(x, y, label) {
-            const bg = this.add.circle(x, y, 40, 0x000000, 0.4)
-                .setInteractive()
-                .setScrollFactor(0)
-                .setDepth(9999);
-
-            const ajusteY = (label === '←' || label === '→') ? -10 : 0;
-
-            const txt = this.add.text(x, y + ajusteY, label, {
-                fontSize: '80px',
-                color: '#ffffff'
-            })
-                .setOrigin(0.5)
-                .setScrollFactor(0)
-                .setDepth(10000);
-
-            return bg;
-        }
-
-        botoesMobile.left = criarBotao.call(this, 60, altura - 700, '←');
-        botoesMobile.right = criarBotao.call(this, 190, altura - 700, '→');
-        botoesMobile.up = criarBotao.call(this, 130, altura - 770, '↑');
-        botoesMobile.down = criarBotao.call(this, 130, altura - 630, '↓');
-
-        botoesMobile.left.on('pointerdown', () => touchInput.left = true);
-        botoesMobile.left.on('pointerup', () => touchInput.left = false);
-        botoesMobile.left.on('pointerout', () => touchInput.left = false);
-
-        botoesMobile.right.on('pointerdown', () => touchInput.right = true);
-        botoesMobile.right.on('pointerup', () => touchInput.right = false);
-        botoesMobile.right.on('pointerout', () => touchInput.right = false);
-
-        botoesMobile.up.on('pointerdown', () => touchInput.up = true);
-        botoesMobile.up.on('pointerup', () => touchInput.up = false);
-        botoesMobile.up.on('pointerout', () => touchInput.up = false);
-
-        botoesMobile.down.on('pointerdown', () => touchInput.down = true);
-        botoesMobile.down.on('pointerup', () => touchInput.down = false);
-        botoesMobile.down.on('pointerout', () => touchInput.down = false);
+        touchInput = criarControlesMobile(this);        
     }
 
     //debug
@@ -254,77 +207,13 @@ function create() {
 function update() {
     if (projetoAberto) return;
 
-
-    //movimentação personagem
-    let dirX = 0;
-    let dirY = 0;
-
-    //Se quiser efeito de deslizar, colocar no topo do arquivo as duas variáveis abaixo
-    let ultimoVX = 0;
-    let ultimoVY = 0;
-
-    if (tecla.left.isDown) dirX = -1;
-    if (tecla.right.isDown) dirX = 1;
-    if (tecla.up.isDown) dirY = -1;
-    if (tecla.down.isDown) dirY = 1;
-
-    // mobile - touch
-    if (touchInput.left) dirX -= 1;
-    if (touchInput.right) dirX += 1;
-    if (touchInput.up) dirY -= 1;
-    if (touchInput.down) dirY += 1;
-
-    //estado
-    let estaMovendo = dirX !== 0 || dirY !== 0;
-    let estaCorrendo = tecla.shift.isDown && estaMovendo;
-
-    //velocidade
-    let velocidadeAlvo = estaCorrendo ? 200 : velocidade;
-
-    if (!estaMovendo) velocidadeAlvo = 0;
-
-    //suavização
-    velocidadeAtual = Phaser.Math.Linear(velocidadeAtual, velocidadeAlvo, 0.05);
-
-    //correção diagonal
-    let vx = dirX;
-    let vy = dirY;
-
-    if (vx !== 0 && vy !== 0) {
-        vx *= 0.7071;
-        vy *= 0.7071;
-    }
-
-    if (estaMovendo) {
-        ultimoVX = vx;
-        ultimoVY = vy;
-    }
-
     //movimento
-    personagem.setVelocity(ultimoVX * velocidadeAtual, ultimoVY * velocidadeAtual);
-
-    //direções
-    let direcao = '';
-
-    if (dirX === 0 && dirY === 0) direcao = 'baixo-idle';
-    else if (dirX === 0 && dirY === 1) direcao = 'baixo';
-    else if (dirX === 0 && dirY === -1) direcao = 'cima';
-    else if (dirX === -1 && dirY === 0) direcao = 'baixo-esquerda';
-    else if (dirX === 1 && dirY === 0) direcao = 'baixo-direita';
-
-    else if (dirX === -1 && dirY === 1) direcao = 'baixo-esquerda';
-    else if (dirX === 1 && dirY === 1) direcao = 'baixo-direita';
-    else if (dirX === -1 && dirY === -1) direcao = 'baixo-esquerda';
-    else if (dirX === 1 && dirY === -1) direcao = 'baixo-direita';
-
-
-    if (direcao !== '') {
-        personagem.anims.play(direcao, true);
-
-        personagem.anims.timeScale = estaCorrendo ? 1.5 : 1;
-    } else {
-        personagem.anims.stop();
-    }
+    velocidadeAtual = atualizarPlayer(
+        personagem, 
+        input, 
+        touchInput, 
+        velocidadeAtual
+    );
 
     //Interações
 
@@ -348,7 +237,7 @@ function update() {
     }
 
 
-    if (podeInteragir && Phaser.Input.Keyboard.JustDown(teclaE)) {
+    if (podeInteragir && (Phaser.Input.Keyboard.JustDown(input.teclaE) || touchInput.interact)) {
         //zoom leve (retorno ao mapa)
         this.tweens.add({
             targets: this.cameras.main,
@@ -380,9 +269,13 @@ function update() {
         //debugPanel.style.display = 'none'
 
         const zoomText = document.getElementById("debugZoom");
+        const velocityText = document.getElementById("debugVelocity");
 
         if (zoomText) {
             zoomText.innerText = "Zoom: " + this.cameras.main.zoom.toFixed(2);
+        }
+        if (velocityText) {
+            velocityText.innerText = "Velocity: " + velocidadeAtual.toFixed(2);
         }
     }
 
@@ -412,6 +305,8 @@ function fecharProjeto() {
     cena.cameras.main.fadeIn(800, 0, 0, 0);
 }
 
+window.fecharProjeto = fecharProjeto;
+
 function toggleDebugFisica() {
     const world = cena.physics.world;
     const btn = document.getElementById("btnDebug");
@@ -430,3 +325,4 @@ function toggleDebugFisica() {
         debugFisicaAtivo = false
     }
 }
+window.toggleDebugFisica = toggleDebugFisica;
