@@ -1,6 +1,7 @@
-import { criarInput} from "./systems/input.js";
+import { criarInput } from "./systems/input.js";
 import { criarControlesMobile } from "./systems/mobileControls.js";
-import { atualizarPlayer } from "./entities/player.js"
+import { atualizarPlayer } from "./entities/player.js";
+import { initInteracoes, registrarZona, atualizarInteracoes } from "./systems/interaction.js";
 
 //imports
 let input;
@@ -20,9 +21,9 @@ let zonaCasa2;
 
 //Projetos
 //let projeto1 = "https://www.twitch.tv/sovousetuvai";
-let projeto1 = "../teste.html";
+let projeto1 = "../assets/projetos/projeto1/index.html";
 //let projeto2 = "https://www.youtube.com/@sovousetuvai";
-let projeto2 = "";
+let projeto2 = "../assets/projetos/projeto2/teste.html";
 
 let velocidadeAtual = 0;
 const frameRateBase = 8;
@@ -34,6 +35,7 @@ const isMobile = window.innerWidth < 768;
 const zoom_padrao = isMobile ? 4 : 3;
 
 let projetoAberto = false;
+let mapaAberto = false;
 
 //mobile
 let usarControlesMobile = false;
@@ -43,16 +45,16 @@ let debugAtivo = true;
 let debugFisicaAtivo = false;
 
 const config = {
-    parent: 'gameContainer',
     type: Phaser.AUTO,
+    parent: 'gameContainer',
+    backgroundColor: '#222222',
+    pixelArt: true,
     scale: {
         mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_HORIZONTALLY,
+        autoCenter: !isMobile ? Phaser.Scale.CENTER_BOTH : Phaser.Scale.CENTER_HORIZONTALLY,
         width: 1280,
         height: 900
     },
-    backgroundColor: '#222222',
-    pixelArt: true,
     physics: {
         default: 'arcade',
         arcade: {
@@ -93,6 +95,25 @@ function preload() {
 
 function create() {
     cena = this;
+
+    initInteracoes(this);
+
+    registrarZona(this, {
+        x: 400,
+        y: 170,
+        largura: 250,
+        altura: 140,
+        url: projeto1
+    });
+
+    registrarZona(this, {
+        x: 470,
+        y: 460,
+        largura: 250,
+        altura: 140,
+        url: projeto2
+    })
+
 
     //mapa
     const map = this.make.tilemap({ key: 'map' });
@@ -145,19 +166,6 @@ function create() {
     this.physics.add.collider(personagem, waterLayer);
     this.physics.add.collider(personagem, terrain2Layer)
 
-    //zonas
-    zonaCasa1 = this.add.zone(400, 170, 250, 140);
-    this.physics.add.existing(zonaCasa1);
-    zonaCasa1.body.setAllowGravity(false);
-    zonaCasa1.body.setImmovable(true);
-    zonaCasa1.url = projeto1
-
-    zonaCasa2 = this.add.zone(470, 460, 250, 140);
-    this.physics.add.existing(zonaCasa2);
-    zonaCasa2.body.setAllowGravity(false);
-    zonaCasa2.body.setImmovable(true);
-    zonaCasa2.url = projeto2
-
     //cameras
     //mundo
     this.cameras.main.startFollow(personagem);
@@ -179,30 +187,12 @@ function create() {
     uiCamera.setScroll(0, 0)
     uiCamera.ignore([waterLayer, terrainLayer, terrain2Layer, objectsLayer, objects2Layer, personagem])
 
-
-    //interações de UI
-    textoInteracao = this.add.text(240, 250, 'Pressione E', {
-        fontSize: '36px',
-        fill: '#ffffff',
-        backgroundColor: '#000000'
-    });
-    //textoInteracao.setVisible(false);
-    textoInteracao.setOrigin(0.5);
-    textoInteracao.setDepth(1000);
-    this.cameras.main.ignore([textoInteracao])
-
-    podeInteragir = false;
-
-    this.physics.add.overlap(personagem, zonaCasa1, () => {
-        podeInteragir = true;
-    });
-
     //mobile
     // usarControlesMobile = this.sys.game.device.input.touch;
     usarControlesMobile = true;
 
     if (usarControlesMobile) {
-        touchInput = criarControlesMobile(this);        
+        touchInput = criarControlesMobile(this);
     }
 
     //debug
@@ -217,58 +207,22 @@ function update() {
 
     //movimento
     velocidadeAtual = atualizarPlayer(
-        personagem, 
-        input, 
-        touchInput, 
+        personagem,
+        input,
+        touchInput,
         velocidadeAtual
     );
 
     //Interações
+    atualizarInteracoes(
+        personagem,
+        input.teclaE,
+        touchInput,
+        abrirProjeto
+    )
 
-    podeInteragir = false;
-
-    let zonaAtual = null;
-    if (this.physics.overlap(personagem, zonaCasa1)) {
-        zonaAtual = zonaCasa1;
-    } else {
-        zonaAtual = zonaCasa2
-    }
-
-    if (this.physics.overlap(personagem, zonaAtual)) {
-        podeInteragir = true;
-    };
-
-    if (podeInteragir) {
-        textoInteracao.setVisible(true);
-    } else {
-        textoInteracao.setVisible(false);
-    }
-
-
-    if (podeInteragir && (Phaser.Input.Keyboard.JustDown(input.teclaE) || touchInput.interact)) {
-        //zoom leve (retorno ao mapa)
-        this.tweens.add({
-            targets: this.cameras.main,
-            zoom: 10,
-            duration: 1000,
-            ease: 'Quad.easeIn'
-        });
-
-        //fade
-        this.cameras.main.fadeOut(1000, 0, 0, 0);
-
-        this.cameras.main.once('camerafadeoutcomplete', () => {
-            projetoAberto = true;
-            const painel = document.getElementById("painelProjeto");
-            const frame = document.getElementById("frameProjeto");
-
-            frame.src = zonaAtual.url;
-            painel.style.display = "block";
-
-            cena.scene.pause();
-        })
-
-
+    if (Phaser.Input.Keyboard.JustDown(input.teclaM)) {
+        toggleMapa();
     }
 
     //DEBUG
@@ -289,6 +243,34 @@ function update() {
 
 }
 
+function abrirProjeto(url) {
+
+    if (projetoAberto) return;
+
+    //zoom
+    cena.tweens.add({
+        targets: cena.cameras.main,
+        zoom: 10,
+        duration: 500,
+        ease: 'Quad.easeIn'
+    });
+
+    //fade OUT
+    cena.cameras.main.fadeOut(500, 0, 0, 0);
+
+    cena.cameras.main.once('camerafadeoutcomplete', () => {
+        projetoAberto = true;
+
+        const painel = document.getElementById("painelProjeto");
+        const frame = document.getElementById("frameProjeto");
+
+        frame.src = url;
+        painel.style.display = "block";
+
+        cena.scene.pause();
+    })
+}
+
 function fecharProjeto() {
     const painel = document.getElementById("painelProjeto");
     const frame = document.getElementById("frameProjeto");
@@ -298,9 +280,9 @@ function fecharProjeto() {
 
     projetoAberto = false;
 
-    cena.scene.resume();
-
-    cena.cameras.main.setZoom(zoom_padrao);
+    setTimeout(() => {
+        cena.scene.resume();
+    }, 50)
 
     // anima suavemente
     cena.tweens.add({
@@ -311,6 +293,12 @@ function fecharProjeto() {
     });
 
     cena.cameras.main.fadeIn(800, 0, 0, 0);
+
+    if (mapaAberto) {
+        //voltar follow da camera
+        cena.cameras.main.startFollow(personagem);
+        mapaAberto = !mapaAberto;
+    }
 }
 
 window.fecharProjeto = fecharProjeto;
@@ -334,3 +322,36 @@ function toggleDebugFisica() {
     }
 }
 window.toggleDebugFisica = toggleDebugFisica;
+
+window.addEventListener('resize', () => {
+    game.scale.refresh();
+});
+
+function toggleMapa() {
+    if (projetoAberto) return; //pra não deixar o mapa abrir dentro do projeto
+
+    mapaAberto = !mapaAberto;
+
+    if (mapaAberto) {
+        cena.tweens.add({
+            targets: cena.cameras.main,
+            zoom: 1,
+            duration: 500,
+            ease: 'Quad.easeOut'
+        });
+
+        //parar follow da camera
+        cena.cameras.main.stopFollow();
+    } else {
+        cena.tweens.add({
+            targets: cena.cameras.main,
+            zoom: zoom_padrao,
+            duration: 500,
+            ease: 'Quad.easeIn'
+        });
+
+        //voltar follow da camera
+        cena.cameras.main.startFollow(personagem);
+    }
+
+}
