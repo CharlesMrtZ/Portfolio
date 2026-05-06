@@ -2,14 +2,14 @@ import { criarInput } from "./systems/input.js";
 import { criarControlesMobile } from "./systems/mobileControls.js";
 import { atualizarPlayer } from "./entities/player.js";
 import { initInteracoes, registrarZona, atualizarInteracoes } from "./systems/interaction.js";
-import { criarCameraState, toggleMapa, abrirComTransicao, fecharComTransicao } from "./systems/camera.js";
+import { CameraController } from "./systems/camera.js";
 
 
 
 //imports
 let input;
 let touchInput;
-let cameraState;
+let camera;
 
 
 let personagem;
@@ -96,6 +96,8 @@ function create() {
     //imports
     input = criarInput(this);
 
+    configurarAtalhos(this);
+
     cena = this;
 
     initInteracoes(this);
@@ -169,13 +171,13 @@ function create() {
     this.physics.add.collider(personagem, terrain2Layer)
 
     //cameras
-    cameraState = criarCameraState(this, personagem, map, zoom_padrao);
-    
+    camera = new CameraController(this, personagem, map, zoom_padrao);
 
     //UI
     const uiCamera = this.cameras.add(0, 0, 1280, 900);
     uiCamera.setScroll(0, 0)
     uiCamera.ignore([waterLayer, terrainLayer, terrain2Layer, objectsLayer, objects2Layer, personagem])
+
 
     //mobile
     // usarControlesMobile = this.sys.game.device.input.touch;
@@ -209,7 +211,7 @@ function update() {
         input.teclaE,
         touchInput,
         (url) => {
-            abrirComTransicao(cameraState, () => {
+            camera.abrirComTransicao(() => {
                 abrirProjeto(url);
             });
         }
@@ -217,9 +219,10 @@ function update() {
 
     //mapa
     if (Phaser.Input.Keyboard.JustDown(input.teclaM)) {
-        toggleMapa(cameraState);
+        camera.toggleMapa();
     }
-    
+
+
     //DEBUG
     if (debugAtivo) {
         const debugPanel = document.getElementById("debugPanel");
@@ -269,7 +272,7 @@ function fecharProjeto() {
     }, 50)
 
 
-    fecharComTransicao(cameraState);
+    camera.fecharComTransicao();
 }
 
 window.fecharProjeto = fecharProjeto;
@@ -297,3 +300,12 @@ window.toggleDebugFisica = toggleDebugFisica;
 window.addEventListener('resize', () => {
     game.scale.refresh();
 });
+
+function configurarAtalhos(scene) {
+    window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && projetoAberto) {
+            camera.shake();
+            fecharProjeto();
+        }
+    });
+};
