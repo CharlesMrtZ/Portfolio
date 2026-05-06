@@ -2,10 +2,14 @@ import { criarInput } from "./systems/input.js";
 import { criarControlesMobile } from "./systems/mobileControls.js";
 import { atualizarPlayer } from "./entities/player.js";
 import { initInteracoes, registrarZona, atualizarInteracoes } from "./systems/interaction.js";
+import { criarCameraState, toggleMapa, abrirComTransicao, fecharComTransicao } from "./systems/camera.js";
+
+
 
 //imports
 let input;
 let touchInput;
+let cameraState;
 
 
 let personagem;
@@ -15,9 +19,6 @@ let teclaE;
 let podeInteragir;
 let textoInteracao;
 
-//zona hardcoded (teste temporário)
-let zonaCasa1;
-let zonaCasa2;
 
 //Projetos
 //let projeto1 = "https://www.twitch.tv/sovousetuvai";
@@ -35,10 +36,11 @@ const isMobile = window.innerWidth < 768;
 const zoom_padrao = isMobile ? 4 : 3;
 
 let projetoAberto = false;
-let mapaAberto = false;
+//let mapaAberto = false;
 
 //mobile
 let usarControlesMobile = false;
+let game;
 
 //DEBUG
 let debugAtivo = true;
@@ -70,12 +72,9 @@ const config = {
     }
 };
 
-new Phaser.Game(config);
+game = new Phaser.Game(config);
 
 function preload() {
-    //imports
-    input = criarInput(this);
-
 
     //personagem
     this.load.spritesheet('personagem', './assets/tiles/Player1.png', {
@@ -94,6 +93,9 @@ function preload() {
 }
 
 function create() {
+    //imports
+    input = criarInput(this);
+
     cena = this;
 
     initInteracoes(this);
@@ -167,20 +169,8 @@ function create() {
     this.physics.add.collider(personagem, terrain2Layer)
 
     //cameras
-    //mundo
-    this.cameras.main.startFollow(personagem);
-    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-    this.cameras.main.setZoom(zoom_padrao);
-
-    //fadeIn Resume
-    this.cameras.main.fadeIn(300, 0, 0, 0);
-
-    this.tweens.add({
-        targets: this.cameras.main,
-        zoom: zoom_padrao,
-        duration: 300,
-        ease: 'Quad.easeOut'
-    });
+    cameraState = criarCameraState(this, personagem, map, zoom_padrao);
+    
 
     //UI
     const uiCamera = this.cameras.add(0, 0, 1280, 900);
@@ -218,13 +208,18 @@ function update() {
         personagem,
         input.teclaE,
         touchInput,
-        abrirProjeto
-    )
+        (url) => {
+            abrirComTransicao(cameraState, () => {
+                abrirProjeto(url);
+            });
+        }
+    );
 
+    //mapa
     if (Phaser.Input.Keyboard.JustDown(input.teclaM)) {
-        toggleMapa();
+        toggleMapa(cameraState);
     }
-
+    
     //DEBUG
     if (debugAtivo) {
         const debugPanel = document.getElementById("debugPanel");
@@ -243,32 +238,21 @@ function update() {
 
 }
 
+
 function abrirProjeto(url) {
 
     if (projetoAberto) return;
 
-    //zoom
-    cena.tweens.add({
-        targets: cena.cameras.main,
-        zoom: 10,
-        duration: 500,
-        ease: 'Quad.easeIn'
-    });
+    projetoAberto = true;
 
-    //fade OUT
-    cena.cameras.main.fadeOut(500, 0, 0, 0);
+    const painel = document.getElementById("painelProjeto");
+    const frame = document.getElementById("frameProjeto");
 
-    cena.cameras.main.once('camerafadeoutcomplete', () => {
-        projetoAberto = true;
+    frame.src = url;
+    painel.style.display = "block";
 
-        const painel = document.getElementById("painelProjeto");
-        const frame = document.getElementById("frameProjeto");
+    cena.scene.pause();
 
-        frame.src = url;
-        painel.style.display = "block";
-
-        cena.scene.pause();
-    })
 }
 
 function fecharProjeto() {
@@ -284,21 +268,8 @@ function fecharProjeto() {
         cena.scene.resume();
     }, 50)
 
-    // anima suavemente
-    cena.tweens.add({
-        targets: cena.cameras.main,
-        zoom: zoom_padrao,
-        duration: 800,
-        ease: 'Quad.easeOut'
-    });
 
-    cena.cameras.main.fadeIn(800, 0, 0, 0);
-
-    if (mapaAberto) {
-        //voltar follow da camera
-        cena.cameras.main.startFollow(personagem);
-        mapaAberto = !mapaAberto;
-    }
+    fecharComTransicao(cameraState);
 }
 
 window.fecharProjeto = fecharProjeto;
@@ -326,32 +297,3 @@ window.toggleDebugFisica = toggleDebugFisica;
 window.addEventListener('resize', () => {
     game.scale.refresh();
 });
-
-function toggleMapa() {
-    if (projetoAberto) return; //pra não deixar o mapa abrir dentro do projeto
-
-    mapaAberto = !mapaAberto;
-
-    if (mapaAberto) {
-        cena.tweens.add({
-            targets: cena.cameras.main,
-            zoom: 1,
-            duration: 500,
-            ease: 'Quad.easeOut'
-        });
-
-        //parar follow da camera
-        cena.cameras.main.stopFollow();
-    } else {
-        cena.tweens.add({
-            targets: cena.cameras.main,
-            zoom: zoom_padrao,
-            duration: 500,
-            ease: 'Quad.easeIn'
-        });
-
-        //voltar follow da camera
-        cena.cameras.main.startFollow(personagem);
-    }
-
-}
