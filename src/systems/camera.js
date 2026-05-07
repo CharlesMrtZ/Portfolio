@@ -1,3 +1,5 @@
+import { gameState } from "../core/state.js";
+
 export class CameraController {
     constructor(scene, player, map, zoomPadrao) {
         this.scene = scene;
@@ -5,7 +7,7 @@ export class CameraController {
         this.player = player;
         this.zoomPadrao = zoomPadrao;
 
-        this.mapaAberto = false;
+        gameState.mapaAberto = false;
 
         // setup inicial
         this.cam.startFollow(this.player);
@@ -16,7 +18,7 @@ export class CameraController {
     toggleMapa() {
         if (!this.player) return;
 
-        if (this.mapaAberto) {
+        if (gameState.mapaAberto) {
             // voltar ao normal
             this.scene.tweens.add({
                 targets: this.cam,
@@ -39,14 +41,13 @@ export class CameraController {
             this.cam.stopFollow();
         }
 
-        this.mapaAberto = !this.mapaAberto;
+        gameState.mapaAberto = !gameState.mapaAberto;
     }
 
     abrirComTransicao(onComplete) {
-        // 🔥 garante consistência
-        if (this.mapaAberto) {
+        if (gameState.mapaAberto) {
             this.cam.startFollow(this.player);
-            this.mapaAberto = false;
+            gameState.mapaAberto = false;
         }
 
         this.scene.tweens.add({

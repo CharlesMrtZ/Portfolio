@@ -1,3 +1,4 @@
+import { gameState } from "./core/state.js";
 import { criarInput } from "./systems/input.js";
 import { criarControlesMobile } from "./systems/mobileControls.js";
 import { atualizarPlayer } from "./entities/player.js";
@@ -35,16 +36,10 @@ const isMobile = window.innerWidth < 768;
 
 const zoom_padrao = isMobile ? 4 : 3;
 
-let projetoAberto = false;
-//let mapaAberto = false;
-
-//mobile
-let usarControlesMobile = false;
 let game;
 
 //DEBUG
 let debugAtivo = true;
-let debugFisicaAtivo = false;
 
 const config = {
     type: Phaser.AUTO,
@@ -181,9 +176,9 @@ function create() {
 
     //mobile
     // usarControlesMobile = this.sys.game.device.input.touch;
-    usarControlesMobile = true;
+    gameState.usarControlesMobile = true;
 
-    if (usarControlesMobile) {
+    if (gameState.usarControlesMobile) {
         touchInput = criarControlesMobile(this);
     }
 
@@ -191,11 +186,11 @@ function create() {
     this.physics.world.createDebugGraphic();
 
     // força estado inicial OFF
-    this.physics.world.debugGraphic.visible = debugFisicaAtivo;
+    this.physics.world.debugGraphic.visible = gameState.debugFisicaAtivo;
 }
 
 function update() {
-    if (projetoAberto) return;
+    if (gameState.projetoAberto) return;
 
     //movimento
     velocidadeAtual = atualizarPlayer(
@@ -226,7 +221,11 @@ function update() {
     //DEBUG
     if (debugAtivo) {
         const debugPanel = document.getElementById("debugPanel");
-        //debugPanel.style.display = 'none'
+        if (gameState.debugPanel) {
+            debugPanel.style.display = "block";
+        } else {
+            debugPanel.style.display = 'none';
+        }
 
         const zoomText = document.getElementById("debugZoom");
         const velocityText = document.getElementById("debugVelocity");
@@ -244,9 +243,10 @@ function update() {
 
 function abrirProjeto(url) {
 
-    if (projetoAberto) return;
+    if (gameState.projetoAberto) return;
 
-    projetoAberto = true;
+    gameState.projetoAberto = true;
+    gameState.mapaAberto = false;
 
     const painel = document.getElementById("painelProjeto");
     const frame = document.getElementById("frameProjeto");
@@ -265,12 +265,11 @@ function fecharProjeto() {
     painel.style.display = "none";
     frame.src = "";
 
-    projetoAberto = false;
+    gameState.projetoAberto = false;
 
     setTimeout(() => {
         cena.scene.resume();
     }, 50)
-
 
     camera.fecharComTransicao();
 }
@@ -289,10 +288,10 @@ function toggleDebugFisica() {
 
     if (world.debugGraphic.visible) {
         btn.innerText = "Debug: ON";
-        debugFisicaAtivo = true
+        gameState.debugFisicaAtivo = true
     } else {
         btn.innerText = "Debug: OFF";
-        debugFisicaAtivo = false
+        gameState.debugFisicaAtivo = false
     }
 }
 window.toggleDebugFisica = toggleDebugFisica;
@@ -303,7 +302,7 @@ window.addEventListener('resize', () => {
 
 function configurarAtalhos(scene) {
     window.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && projetoAberto) {
+        if (event.key === 'Escape' && gameState.projetoAberto) {
             camera.shake();
             fecharProjeto();
         }
