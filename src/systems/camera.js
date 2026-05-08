@@ -1,18 +1,21 @@
 import { fecharMapaState, gameState, toggleMapaState } from "../core/state.js";
 
+
+const isMobile = window.innerWidth < 768;
+const zoom_padrao = isMobile ? 4 : 3;
+
 export class CameraController {
-    constructor(scene, player, map, zoomPadrao) {
+    constructor(scene, player, map) {
         this.scene = scene;
         this.cam = scene.cameras.main;
         this.player = player;
-        this.zoomPadrao = zoomPadrao;
 
         fecharMapaState();
 
         // setup inicial
         this.cam.startFollow(this.player);
         this.cam.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-        this.cam.setZoom(this.zoomPadrao);
+        this.cam.setZoom(zoom_padrao);
     }
 
     toggleMapa() {
@@ -22,7 +25,7 @@ export class CameraController {
             // voltar ao normal
             this.scene.tweens.add({
                 targets: this.cam,
-                zoom: this.zoomPadrao,
+                zoom: zoom_padrao,
                 duration: 500,
                 ease: 'Quad.easeIn'
             });
@@ -67,7 +70,7 @@ export class CameraController {
     fecharComTransicao() {
         this.scene.tweens.add({
             targets: this.cam,
-            zoom: this.zoomPadrao,
+            zoom: zoom_padrao,
             duration: 800,
             ease: 'Quad.easeOut'
         });

@@ -4,7 +4,7 @@ export const gameState = {
     usarControlesMobile: false,
 
     //DEBUG
-    debugPanel: false,
+    debugPanel: true,
     debugFisicaAtivo: false
 };
 
@@ -16,7 +16,7 @@ export function abrirProjetoState(){
 export function fecharProjetoState(){
     gameState.projetoAberto = false;
 }
-//////////////////////////////////////
+
 
 // MAPA
 export function abrirMapaState() {
@@ -30,7 +30,7 @@ export function fecharMapaState() {
 export function toggleMapaState() {
     gameState.mapaAberto = !gameState.mapaAberto;
 }
-//////////////////////////////////////
+
 
 //DEBUG
 export function setDebugFisicaState(valor) {
@@ -45,4 +45,3 @@ export function toggleControlesMobileState() {
     //     document.body.classList.remove("mobile-controls");
     // }
 }
-//////////////////////////////////////
