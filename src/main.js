@@ -1,9 +1,13 @@
-import { gameState } from "./core/state.js";
+import { gameState, abrirProjetoState, fecharProjetoState, toggleMapaState, setDebugFisicaState, toggleControlesMobileState } from "./core/state.js";
 import { criarInput } from "./systems/input.js";
 import { criarControlesMobile } from "./systems/mobileControls.js";
 import { atualizarPlayer } from "./entities/player.js";
 import { initInteracoes, registrarZona, atualizarInteracoes } from "./systems/interaction.js";
 import { CameraController } from "./systems/camera.js";
+import { projetos } from "./data/projects.js";
+import { criarUI, mostrarTextoInteracao, esconderTextoInteracao } from "./ui/ui.js";
+import { criarMapa } from "./scene/mapa.js";
+import { criarPlayer } from "./entities/playerFactory.js";
 
 
 
@@ -14,18 +18,6 @@ let camera;
 
 
 let personagem;
-let tecla;
-let teclaE;
-
-let podeInteragir;
-let textoInteracao;
-
-
-//Projetos
-//let projeto1 = "https://www.twitch.tv/sovousetuvai";
-let projeto1 = "../assets/projetos/projeto1/index.html";
-//let projeto2 = "https://www.youtube.com/@sovousetuvai";
-let projeto2 = "../assets/projetos/projeto2/teste.html";
 
 let velocidadeAtual = 0;
 const frameRateBase = 8;
@@ -37,9 +29,6 @@ const isMobile = window.innerWidth < 768;
 const zoom_padrao = isMobile ? 4 : 3;
 
 let game;
-
-//DEBUG
-let debugAtivo = true;
 
 const config = {
     type: Phaser.AUTO,
@@ -55,7 +44,7 @@ const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: false
+            debug: gameState.debugPanel
         }
     },
 
@@ -97,81 +86,38 @@ function create() {
 
     initInteracoes(this);
 
-    registrarZona(this, {
-        x: 400,
-        y: 170,
-        largura: 250,
-        altura: 140,
-        url: projeto1
+    //Projetos
+    projetos.forEach(projeto => {
+        registrarZona(this, projeto);
     });
 
-    registrarZona(this, {
-        x: 470,
-        y: 460,
-        largura: 250,
-        altura: 140,
-        url: projeto2
-    })
-
-
     //mapa
-    const map = this.make.tilemap({ key: 'map' });
-    const tilesetIsland = map.addTilesetImage('island', 'terrain');
-    const tilesetObjects2 = map.addTilesetImage('objects2', 'objects2');
-    const tilesetFence = map.addTilesetImage('fence', 'fence');
-    //const groundLayer = map.createLayer('grass', tileset, 0, 0);
-    //const waterLayer = map.createLayer('water', tileset, 0, 0);
-    const waterLayer = map.createLayer('water', tilesetIsland, 0, 0);
-    const terrainLayer = map.createLayer('terrain', tilesetIsland, 0, 0);
-    const terrain2Layer = map.createLayer('terrain2', tilesetIsland, 0, 0);
-    const objectsLayer = map.createLayer('objects', [tilesetObjects2, tilesetFence], 0, 0);
-    const objects2Layer = map.createLayer('objects2', tilesetObjects2, 0, 0);
-
-    //colisão
-    waterLayer.setCollisionByProperty({ collider: true });
-    terrain2Layer.setCollisionByProperty({ collider: true });
-
-
+    const mapData = criarMapa(this);
 
     //personagem
-    personagem = this.physics.add.sprite(180, 200, 'personagem');
-    personagem.body.setSize(22, 20);
-    personagem.body.setOffset(21, 45);
-
-    function criarAnimacao(nome, linha) {
-        this.anims.create({
-            key: nome,
-            frames: this.anims.generateFrameNumbers('personagem', {
-                start: linha * 4,
-                end: linha * 4 + 3
-            }),
-            frameRate: frameRateBase,
-            repeat: -1
-        });
-    }
-
-    //chamadas de animação
-    criarAnimacao.call(this, 'baixo-idle', 0)
-    criarAnimacao.call(this, 'esquerda', 1)
-    criarAnimacao.call(this, 'cima-idle', 2)
-    criarAnimacao.call(this, 'direita', 3)
-    criarAnimacao.call(this, 'baixo', 4)
-    criarAnimacao.call(this, 'baixo-esquerda', 5)
-    criarAnimacao.call(this, 'cima', 6)
-    criarAnimacao.call(this, 'baixo-direita', 7)
-
+    personagem = criarPlayer(this);
 
     //colisores
-    this.physics.add.collider(personagem, waterLayer);
-    this.physics.add.collider(personagem, terrain2Layer)
+    this.physics.add.collider(
+        personagem, 
+        mapData.layers.waterLayer
+    );
+
+    this.physics.add.collider(
+        personagem, 
+        mapData.layers.terrain2Layer
+    );
 
     //cameras
-    camera = new CameraController(this, personagem, map, zoom_padrao);
+    camera = new CameraController(this, personagem, mapData.map, zoom_padrao);
 
+    
     //UI
+    criarUI(this);
+    
     const uiCamera = this.cameras.add(0, 0, 1280, 900);
     uiCamera.setScroll(0, 0)
-    uiCamera.ignore([waterLayer, terrainLayer, terrain2Layer, objectsLayer, objects2Layer, personagem])
+    uiCamera.ignore([mapData.layers.waterLayer, mapData.layers.terrainLayer, mapData.layers.terrain2Layer, mapData.layers.objectsLayer, mapData.layers.objects2Layer, personagem])
 
 
     //mobile
@@ -201,7 +147,7 @@ function update() {
     );
 
     //Interações
-    atualizarInteracoes(
+    const interacao = atualizarInteracoes(
         personagem,
         input.teclaE,
         touchInput,
@@ -212,6 +158,12 @@ function update() {
         }
     );
 
+    if (interacao.podeInteragir) {
+        mostrarTextoInteracao();
+    } else {
+        esconderTextoInteracao();
+    }
+
     //mapa
     if (Phaser.Input.Keyboard.JustDown(input.teclaM)) {
         camera.toggleMapa();
@@ -219,22 +171,22 @@ function update() {
 
 
     //DEBUG
-    if (debugAtivo) {
+    if (gameState.debugPanel) {
         const debugPanel = document.getElementById("debugPanel");
         if (gameState.debugPanel) {
             debugPanel.style.display = "block";
+
+            const zoomText = document.getElementById("debugZoom");
+            const velocityText = document.getElementById("debugVelocity");
+
+            if (zoomText) {
+                zoomText.innerText = "Zoom: " + this.cameras.main.zoom.toFixed(2);
+            }
+            if (velocityText) {
+                velocityText.innerText = "Velocity: " + velocidadeAtual.toFixed(2);
+            }
         } else {
             debugPanel.style.display = 'none';
-        }
-
-        const zoomText = document.getElementById("debugZoom");
-        const velocityText = document.getElementById("debugVelocity");
-
-        if (zoomText) {
-            zoomText.innerText = "Zoom: " + this.cameras.main.zoom.toFixed(2);
-        }
-        if (velocityText) {
-            velocityText.innerText = "Velocity: " + velocidadeAtual.toFixed(2);
         }
     }
 
@@ -245,7 +197,8 @@ function abrirProjeto(url) {
 
     if (gameState.projetoAberto) return;
 
-    gameState.projetoAberto = true;
+    //gameState.projetoAberto = true;
+    abrirProjetoState();
     gameState.mapaAberto = false;
 
     const painel = document.getElementById("painelProjeto");
@@ -265,7 +218,7 @@ function fecharProjeto() {
     painel.style.display = "none";
     frame.src = "";
 
-    gameState.projetoAberto = false;
+    fecharProjetoState()
 
     setTimeout(() => {
         cena.scene.resume();
@@ -288,10 +241,10 @@ function toggleDebugFisica() {
 
     if (world.debugGraphic.visible) {
         btn.innerText = "Debug: ON";
-        gameState.debugFisicaAtivo = true
+        setDebugFisicaState(true);
     } else {
         btn.innerText = "Debug: OFF";
-        gameState.debugFisicaAtivo = false
+        setDebugFisicaState(false);
     }
 }
 window.toggleDebugFisica = toggleDebugFisica;

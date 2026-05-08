@@ -2,24 +2,10 @@ let zonas = [];
 let zonaAtual = null;
 let podeInteragir = false;
 
-let textoInteracao;
 let cenaRef;
 
 export function initInteracoes(scene) {
-    cenaRef = scene;
-
-    textoInteracao = scene.add.text(240, 250, "Pressione E", {
-        fontSize: '36px',
-        fill: '#ffffff',
-        backgroundColor: '#000000'
-    });
-
-    textoInteracao.setOrigin(0.5);
-    textoInteracao.setDepth(1000);
-    textoInteracao.setVisible(false);
-
-    scene.cameras.main.ignore([textoInteracao]);
-    
+    cenaRef = scene;    
 }
 
 export function registrarZona(scene, config) {
@@ -56,8 +42,6 @@ export function atualizarInteracoes(player, teclaE, touchInput, abrirProjetoCall
         }
     }
 
-    textoInteracao.setVisible(podeInteragir);
-
     const interagir =
         ( teclaE && Phaser.Input.Keyboard.JustDown(teclaE)) ||
         touchInput?.interact;
@@ -65,4 +49,9 @@ export function atualizarInteracoes(player, teclaE, touchInput, abrirProjetoCall
     if (podeInteragir && interagir && zonaAtual) {
         abrirProjetoCallback(zonaAtual.data.url)
     }
+
+    return {
+        podeInteragir,
+        zonaAtual
+    };
 }

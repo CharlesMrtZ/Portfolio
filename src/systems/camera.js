@@ -1,4 +1,4 @@
-import { gameState } from "../core/state.js";
+import { fecharMapaState, gameState, toggleMapaState } from "../core/state.js";
 
 export class CameraController {
     constructor(scene, player, map, zoomPadrao) {
@@ -7,7 +7,7 @@ export class CameraController {
         this.player = player;
         this.zoomPadrao = zoomPadrao;
 
-        gameState.mapaAberto = false;
+        fecharMapaState();
 
         // setup inicial
         this.cam.startFollow(this.player);
@@ -41,13 +41,13 @@ export class CameraController {
             this.cam.stopFollow();
         }
 
-        gameState.mapaAberto = !gameState.mapaAberto;
+        toggleMapaState();
     }
 
     abrirComTransicao(onComplete) {
         if (gameState.mapaAberto) {
             this.cam.startFollow(this.player);
-            gameState.mapaAberto = false;
+            fecharMapaState();
         }
 
         this.scene.tweens.add({

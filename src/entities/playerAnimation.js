@@ -21,3 +21,34 @@ export function atualizarAnimacao(personagem, dirX, dirY, estaCorrendo) {
     personagem.anims.timeScale = estaCorrendo ? 1.5 : 1; // Aumenta a velocidade da animação ao correr
 
 }
+
+const frameRateBase = 8; // Velocidade base da animação
+
+export function criarAnimacaoPlayer(scene) {
+
+    function criar(nome, linha) {
+        scene.anims.create({
+            key: nome,
+
+            frames:
+                scene.anims.generateFrameNumbers(
+                    'personagem',
+                    {
+                        start: linha * 4,
+                        end: linha * 4 + 3
+                    }
+                ),
+            frameRate: frameRateBase,
+            repeat: -1
+        });
+    }
+
+    criar('baixo-idle', 0);
+    criar('esquerda', 1);
+    criar('cima-idle', 2);
+    criar('direita', 3);
+    criar('baixo', 4);
+    criar('baixo-esquerda', 5);
+    criar('cima', 6);
+    criar('baixo-direita', 7);
+}
