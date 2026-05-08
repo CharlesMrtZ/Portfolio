@@ -8,6 +8,7 @@ import { projetos } from "./data/projects.js";
 import { criarUI, mostrarTextoInteracao, esconderTextoInteracao } from "./ui/ui.js";
 import { criarMapa } from "./scene/mapa.js";
 import { criarPlayer } from "./entities/playerFactory.js";
+import { abrirProjeto, fecharProjeto } from "./systems/projectSystem.js";
 
 
 
@@ -152,9 +153,7 @@ function update() {
         input.teclaE,
         touchInput,
         (url) => {
-            camera.abrirComTransicao(() => {
-                abrirProjeto(url);
-            });
+                abrirProjeto(cena, camera, url);
         }
     );
 
@@ -192,42 +191,7 @@ function update() {
 
 }
 
-
-function abrirProjeto(url) {
-
-    if (gameState.projetoAberto) return;
-
-    //gameState.projetoAberto = true;
-    abrirProjetoState();
-    gameState.mapaAberto = false;
-
-    const painel = document.getElementById("painelProjeto");
-    const frame = document.getElementById("frameProjeto");
-
-    frame.src = url;
-    painel.style.display = "block";
-
-    cena.scene.pause();
-
-}
-
-function fecharProjeto() {
-    const painel = document.getElementById("painelProjeto");
-    const frame = document.getElementById("frameProjeto");
-
-    painel.style.display = "none";
-    frame.src = "";
-
-    fecharProjetoState()
-
-    setTimeout(() => {
-        cena.scene.resume();
-    }, 50)
-
-    camera.fecharComTransicao();
-}
-
-window.fecharProjeto = fecharProjeto;
+window.fecharProjeto = () => fecharProjeto(cena, camera);
 
 function toggleDebugFisica() {
     const world = cena.physics.world;
