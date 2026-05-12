@@ -1,14 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>quadro de cards</title>
+    <link rel="stylesheet" href="./style.css">
 </head>
+
 <body>
-    <div style="background-color: red;">
-        Olá mundo!
-        Teste funcionando!!!
+    <div class="quadro">
+        <div class="coluna">
+            <div class="lista">
+                <h2>To do</h2>
+                <div class="card" draggable="true">card 1</div>
+                <div class="card" draggable="true">card 2</div>
+                <div class="card" draggable="true">card 3</div>
+                <div class="card" draggable="true">card 4</div>
+            </div>
+        </div>
+        <div class="coluna">
+            <div class="lista">
+                <h2>Doing</h2>
+            </div>
+        </div>
+        <div class="coluna">
+            <div class="lista">
+                <h2>Done</h2>
+            </div>
+        </div>
     </div>
+    <script src="./script.js"></script>
 </body>
+
 </html>

@@ -3,7 +3,7 @@ export function criarMapa(scene) {
     const map = scene.make.tilemap({ key: 'map' });
 
     const tilesetIsland =
-        map.addTilesetImage('island', 'terrain');
+        map.addTilesetImage('island', 'island');
 
     const tilesetObjects2 =
         map.addTilesetImage('objects2', 'objects2');

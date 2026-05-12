@@ -1,0 +1,59 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #1e1e1e;
+    color: white;
+
+    font-family: Arial;
+}
+
+.quadro {
+    display: flex;
+
+    gap: 20px;
+
+    padding: 20px;
+    justify-content: center;
+}
+
+.coluna {
+
+    width: 300px;
+    min-height: 600px;
+
+    background: #2b2b2b;
+
+    border-radius: 10px;
+
+    padding: 15px;
+}
+
+.coluna h2 {
+    margin-bottom: 15px;
+}
+
+.lista {
+
+    min-height: 200px;
+}
+
+.card {
+
+    background: #3b3b3b;
+
+    padding: 15px;
+
+    border-radius: 8px;
+
+    margin-bottom: 10px;
+
+    cursor: grab;
+}
+
+.card:active {
+    cursor: grabbing;
+}

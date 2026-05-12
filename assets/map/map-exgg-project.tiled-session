@@ -1,0 +1,87 @@
+{
+    "activeFile": "map-exgg.json",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "file.lastUsedOpenFilter": "Todos os Ficheiros (*)",
+    "fileStates": {
+        "": {
+            "scaleInDock": 1
+        },
+        "map-exgg.json": {
+            "scale": 0.75,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 754.6666666666667,
+                "y": 1664
+            }
+        },
+        "map-exgg.json#block-collision": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "map-exgg.json#island": {
+            "scaleInDock": 1.5
+        },
+        "map-exgg.json#objects2": {
+            "scaleInDock": 1.5
+        },
+        "map-exgg.json#terrain": {
+            "scaleInDock": 1.5
+        },
+        "map-exgg.tmx": {
+            "scale": 0.25,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 2368,
+                "y": 944
+            }
+        },
+        "map-exgg.tmx#block-collision": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "map-exgg.tmx#island": {
+            "scaleInDock": 1.5
+        },
+        "map-exgg.tmx#objects2": {
+            "scaleInDock": 1.5
+        },
+        "map-exgg.tmx#terrain": {
+            "scaleInDock": 1.5
+        },
+        "map.tmx": {
+            "scale": 0.8827083333333333,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 640.0755251357093,
+                "y": 480.3398631106915
+            }
+        },
+        "map.tmx#Grass": {
+            "scaleInDock": 1
+        },
+        "map.tmx#Textures": {
+            "scaleInDock": 1
+        },
+        "map.tmx#Wall": {
+            "scaleInDock": 1
+        }
+    },
+    "last.exportedFilePath": "D:/Programação/Projetos-Charles/Portfolio-map/portfolio/assets/map",
+    "last.imagePath": "D:/Programação/Projetos-Charles/Portfolio-map/portfolio/assets/map",
+    "map.fixedSize": false,
+    "map.lastUsedExportFilter": "Arquivos de mapa JSON (*.tmj *.json)",
+    "map.lastUsedFormat": "json",
+    "openFiles": [
+        "map-exgg.json"
+    ],
+    "project": "map-exgg-project.tiled-project",
+    "recentFiles": [
+        "map-exgg.json",
+        "map-exgg.tmx",
+        "map.tmx"
+    ],
+    "resizeMap.removeObjects": true,
+    "tileset.embedInMap": true
+}

@@ -16,6 +16,9 @@ export class CameraController {
         this.cam.startFollow(this.player);
         this.cam.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
         this.cam.setZoom(zoom_padrao);
+
+        console.log(map.widthInPixels);
+        console.log(map.heightInPixels);
     }
 
     toggleMapa() {
@@ -81,6 +84,6 @@ export class CameraController {
     }
 
     shake(intensidade = 0.01, duracao = 200) {
-    this.cam.shake(duracao, intensidade);
-}
+        this.cam.shake(duracao, intensidade);
+    }
 }

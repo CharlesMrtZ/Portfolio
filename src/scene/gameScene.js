@@ -2,6 +2,7 @@ import { criarInput } from "../systems/input.js";
 import { initInteracoes, registrarZona, atualizarInteracoes } from "../systems/interaction.js";
 import { projetos } from "../data/projects.js";
 import { criarMapa } from "../scene/mapa.js";
+import { criarMapa1 } from "../scene/mapa1.js";
 import { criarPlayer } from "../entities/playerFactory.js";
 import { CameraController } from "../systems/camera.js";
 import { criarUI, mostrarTextoInteracao, esconderTextoInteracao } from "../ui/ui.js";
@@ -28,11 +29,14 @@ export class GameScene extends Phaser.Scene {
 
         //tiles
         //this.load.image('ground', '../assets/tiles/Textures.png');
-        this.load.image('terrain', '../assets/map 2/island.png');
+        this.load.image('island', '../assets/map 2/island.png');
+        this.load.image('terrain', '../assets/map 2/terrain.png');
+        this.load.image('block-collision', '../assets/map/block-collision.png');
         this.load.image('objects2', '../assets/map 2/objects2.png');
         this.load.image('fence', '../assets/map 2/fence.png');
         //this.load.tilemapTiledJSON('map', '../assets/map/map.json')
         this.load.tilemapTiledJSON('map', '../assets/map 2/map1.json')
+        this.load.tilemapTiledJSON('map-exgg', '../assets/map/map-exgg.json')
 
     }
 
@@ -53,7 +57,8 @@ export class GameScene extends Phaser.Scene {
         });
 
         //mapa
-        const mapData = criarMapa(this);
+        //const mapData = criarMapa(this);
+        const mapData = criarMapa1(this);
 
         //personagem
         this.personagem = criarPlayer(this);
@@ -61,12 +66,19 @@ export class GameScene extends Phaser.Scene {
         //colisores
         this.physics.add.collider(
             this.personagem,
-            mapData.layers.waterLayer
+            mapData.layers.collisionWaterLayer
         );
 
         this.physics.add.collider(
             this.personagem,
-            mapData.layers.terrain2Layer
+            mapData.layers.collisionObjectsLayer
+        );
+
+        this.physics.world.setBounds(
+            0,
+            0,
+            mapData.map.widthInPixels,
+            mapData.map.heightInPixels
         );
 
         //cameras
@@ -76,9 +88,24 @@ export class GameScene extends Phaser.Scene {
         //UI
         criarUI(this);
 
-        const uiCamera = this.cameras.add(0, 0, 1280, 900);
+        const uiCamera = this.cameras.add(
+            0, 
+            0, 
+            mapData.map.widthInPixels, 
+            mapData.map.heightInPixels
+        );
         uiCamera.setScroll(0, 0)
-        uiCamera.ignore([mapData.layers.waterLayer, mapData.layers.terrainLayer, mapData.layers.terrain2Layer, mapData.layers.objectsLayer, mapData.layers.objects2Layer, this.personagem])
+        uiCamera.ignore([
+            mapData.layers.waterLayer,
+             mapData.layers.IslandLayer,
+            mapData.layers.Ground2Layer,
+            mapData.layers.objectsLayer,
+            mapData.layers.objects2Layer,
+            mapData.layers.objects3Layer,
+            mapData.layers.collisionWaterLayer,
+            mapData.layers.collisionObjectsLayer,
+            this.personagem
+            ])
 
 
         //mobile
@@ -101,7 +128,7 @@ export class GameScene extends Phaser.Scene {
             this.scale.refresh();
         });
 
-        window.toggleDebugFisica = () => {this.toggleDebugFisica()};
+        window.toggleDebugFisica = () => { this.toggleDebugFisica() };
     }
 
     update() {

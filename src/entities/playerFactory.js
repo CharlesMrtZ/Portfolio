@@ -4,8 +4,8 @@ export function criarPlayer(scene) {
 
     const player =
         scene.physics.add.sprite(
-            180,
-            200,
+            230,
+            1800,
             'personagem'
         );
 
