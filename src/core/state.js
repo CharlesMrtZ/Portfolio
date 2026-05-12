@@ -5,7 +5,7 @@ export const gameState = {
 
     //DEBUG
     debugPanel: true,
-    debugFisicaAtivo: false
+    debugFisicaAtivo: true
 };
 
 // PROJETO
